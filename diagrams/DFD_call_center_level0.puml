@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Container>
+
+Person(operator, "Оператор Call-центра", "Работает с карточкой клиента и обращением")
+System(telephony, "Телефония", "Отправляет события о звонках")
+System(crm, "CRM", "Хранит клиентов и обращения")
+System(notification, "Сервис уведомлений", "SMS/Email/Push")
+
+System_Boundary(call_system, "Система обработки обращений") {
+    System(core, "Ядро системы", "Приём событий, бизнес-логика")
+}
+
+Rel(telephony, core, "CALL_ANSWERED (webhook)")
+Rel(core, crm, "Поиск клиента, создание обращения")
+Rel(core, notification, "Отправка уведомления")
+Rel(core, operator, "Отображение карточки")
+@enduml

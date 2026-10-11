@@ -1,0 +1,109 @@
+@startuml
+' ENUM-типы
+enum Channel {
+  SMS
+  EMAIL
+  PUSH
+}
+
+enum TicketStatus {
+  CREATED
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+  REQUIRES_CLIENT
+  REQUIRES_MANUAL
+}
+
+enum OperatorStatus {
+  ACTIVE
+  ON_BREAK
+  OFFLINE
+}
+
+enum OperatorRole {
+  OPERATOR
+  SUPERVISOR
+  ADMIN
+}
+
+enum NotificationStatus {
+  CREATED
+  QUEUED
+  SENT
+  FAILED
+}
+
+' Таблицы
+class Client {
+  {field} <<PK>> id: UUID
+  --
+  {field} first_name: VARCHAR(50) NOT NULL
+  {field} last_name: VARCHAR(50) NOT NULL
+  {field} <<UQ>> phone_number: VARCHAR(20) NOT NULL
+  {field} created_at: TIMESTAMP NOT NULL
+  {field} updated_at: TIMESTAMP NULL
+}
+
+class ClientContact {
+  {field} <<PK>> id: UUID
+  {field} <<FK>> client_id: UUID NOT NULL
+  --
+  {field} channel: Channel NOT NULL
+  {field} address: VARCHAR(255) NOT NULL
+  {field} used_at: TIMESTAMP NULL
+  {field} created_at: TIMESTAMP NOT NULL
+  {field} updated_at: TIMESTAMP NULL
+}
+
+class Ticket {
+  {field} <<PK>> id: UUID
+  {field} <<FK>> client_id: UUID NULL
+  {field} <<FK>> assigned_to: UUID NULL
+  --
+  {field} status: TicketStatus NOT NULL
+  {field} <<UQ>> source_call_id: VARCHAR(100) NOT NULL
+  {field} created_at: TIMESTAMP NOT NULL
+  {field} updated_at: TIMESTAMP NULL
+}
+
+class Operator {
+  {field} <<PK>> id: UUID
+  --
+  {field} first_name: VARCHAR(50) NOT NULL
+  {field} last_name: VARCHAR(50) NOT NULL
+  {field} role: OperatorRole NOT NULL
+  {field} status: OperatorStatus NOT NULL
+  {field} is_duty: BOOLEAN NOT NULL DEFAULT FALSE
+  {field} created_at: TIMESTAMP NOT NULL
+  {field} updated_at: TIMESTAMP NULL
+}
+
+class Notification {
+  {field} <<PK>> id: UUID
+  {field} <<FK>> ticket_id: UUID NOT NULL
+  {field} <<FK>> contact_id: UUID NOT NULL
+  --
+  {field} channel: Channel NOT NULL
+  {field} status: NotificationStatus NOT NULL
+  {field} created_at: TIMESTAMP NOT NULL
+  {field} sent_at: TIMESTAMP NULL
+}
+
+' Связи
+Client ||--o{ ClientContact : "имеет контакты"
+Client ||--o{ Ticket : "создаёт обращения"
+Operator ||--o{ Ticket : "назначается ответственным"
+Ticket ||--o{ Notification : "порождает"
+ClientContact ||--o{ Notification : "используется для отправки"
+
+' Связи с enum
+ClientContact::channel --> Channel
+Ticket::status --> TicketStatus
+Operator::status --> OperatorStatus
+Operator::role --> OperatorRole
+Notification::channel --> Channel
+Notification::status --> NotificationStatus
+
+@enduml
